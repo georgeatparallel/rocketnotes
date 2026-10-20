@@ -39,6 +39,9 @@ export class LlmDialogComponent implements OnDestroy, OnInit {
   subscription: Subscription;
   isLoading: boolean = false;
   activeTab: string = 'tab1';
+  searchContext: 'notes' | 'web' = 'notes';
+  conversationId: string = crypto.randomUUID();
+  private chatRequest?: Subscription;
 
   constructor(
     private llmDialogService: LlmDialogService,
@@ -76,6 +79,7 @@ export class LlmDialogComponent implements OnDestroy, OnInit {
 
   ngOnDestroy() {
     this.subscription.unsubscribe();
+    this.chatRequest?.unsubscribe();
   }
 
   sendChatMessage() {
@@ -92,22 +96,39 @@ export class LlmDialogComponent implements OnDestroy, OnInit {
     const userMessage = this.chatInput.trim();
     this.chatInput = '';
 
-    this.basicRestService
+    this.chatRequest = this.basicRestService
       .post('chat', {
         userId: localStorage.getItem('currentUserId'),
         prompt: userMessage,
+        searchContext: this.searchContext,
+        conversationId: this.conversationId,
       })
-      .subscribe((result) => {
-        this.isLoading = false;
-        const resultString = JSON.stringify(result);
-        const formattedResult = resultString
-          .substring(1, resultString.length - 1)
-          .replace(/\\n/g, '\n');
-        this.messages.push({ text: formattedResult, isUser: false });
-        setTimeout(() => {
-          this.scrollToBottom();
-        }, 0);
+      .subscribe({
+        next: (result) => {
+          this.isLoading = false;
+          this.messages.push({ text: String(result), isUser: false });
+          setTimeout(() => {
+            this.scrollToBottom();
+          }, 0);
+        },
+        error: (error) => {
+          this.isLoading = false;
+          this.messages.push({
+            text: error.status === 403
+              ? 'Web search is disabled by the server administrator.'
+              : 'Could not answer this question. Please try again.',
+            isUser: false,
+          });
+        },
       });
+  }
+
+  newChat() {
+    if (this.isLoading) {
+      return;
+    }
+    this.messages = [];
+    this.conversationId = crypto.randomUUID();
   }
 
   sendSearchMessage() {
