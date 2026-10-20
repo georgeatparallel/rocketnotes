@@ -82,6 +82,25 @@ describe('LlmDialogComponent chat context', () => {
     expect(other.conversationId).not.toBe(component.conversationId);
   });
 
+  it('creates and resets opaque UUIDs without the secure-context randomUUID API', () => {
+    const descriptor = Object.getOwnPropertyDescriptor(crypto, 'randomUUID');
+    Object.defineProperty(crypto, 'randomUUID', { value: undefined, configurable: true });
+    try {
+      const other = new LlmDialogComponent(null, null, rest, null);
+      const first = other.conversationId;
+      expect(first).toMatch(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/);
+      other.newChat();
+      expect(other.conversationId).not.toBe(first);
+      expect(other.conversationId).toMatch(/^[a-f0-9-]{36}$/);
+    } finally {
+      if (descriptor) {
+        Object.defineProperty(crypto, 'randomUUID', descriptor);
+      } else {
+        delete crypto['randomUUID'];
+      }
+    }
+  });
+
   it('does not reset or duplicate an in-flight request', fakeAsync(() => {
     rest.post.and.returnValue(new Subject());
     component.sendChatMessage();

@@ -22,6 +22,15 @@ type SearchResult = {
   text: string;
 };
 
+function createConversationId(): string {
+  // getRandomValues also works on HTTP self-hosted origins.
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
 @Component({
   selector: 'app-llm-dialog',
   templateUrl: './llm-dialog.component.html',
@@ -40,7 +49,7 @@ export class LlmDialogComponent implements OnDestroy, OnInit {
   isLoading: boolean = false;
   activeTab: string = 'tab1';
   searchContext: 'notes' | 'web' = 'notes';
-  conversationId: string = crypto.randomUUID();
+  conversationId: string = createConversationId();
   private chatRequest?: Subscription;
 
   constructor(
@@ -128,7 +137,7 @@ export class LlmDialogComponent implements OnDestroy, OnInit {
       return;
     }
     this.messages = [];
-    this.conversationId = crypto.randomUUID();
+    this.conversationId = createConversationId();
   }
 
   sendSearchMessage() {
@@ -162,17 +171,19 @@ export class LlmDialogComponent implements OnDestroy, OnInit {
     try {
       this.chatHistory.nativeElement.scrollTop =
         this.chatHistory.nativeElement.scrollHeight;
-    } catch (err) {}
+    } catch (err) {
+      // The chat history may not be rendered yet.
+    }
   }
 
   openTab(evt: any, tabId: string) {
     this.activeTab = tabId;
-    let i: number, tabcontent: any, tablinks: any;
-    tabcontent = document.getElementsByClassName('tabcontent');
+    let i: number;
+    const tabcontent: any = document.getElementsByClassName('tabcontent');
     for (i = 0; i < tabcontent.length; i++) {
       tabcontent[i].style.display = 'none';
     }
-    tablinks = document.getElementsByClassName('tablinks');
+    const tablinks: any = document.getElementsByClassName('tablinks');
     for (i = 0; i < tablinks.length; i++) {
       tablinks[i].className = tablinks[i].className.replace(' active', '');
     }
@@ -204,11 +215,6 @@ export class LlmDialogComponent implements OnDestroy, OnInit {
         this.titleService.setTitle(document.title);
         this.llmDialogService.closeDialog();
       });
-  }
-
-  resizeTextarea(event: any) {
-    // event.target.style.height = 'auto';
-    // event.target.style.height = event.target.scrollHeight + 'px';
   }
 
   onKeydown(event: any) {
