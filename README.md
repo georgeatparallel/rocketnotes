@@ -71,7 +71,7 @@ Built with
 Select **Context → Web** in the chat dialog to use public web sources with
 [Parallel Search MCP](https://docs.parallel.ai/integrations/mcp/search-mcp).
 Search uses Fast mode with no Parallel account or API key required. Include a
-URL to read that page. **My notes** remains the initial context; Web sends your
+URL in Web mode to read that page. **My notes** remains the initial context; Web sends your
 question to Parallel without including private notes. See the
 [web chat setup and API](handler-ai/README.md#web-context-in-chat).
 

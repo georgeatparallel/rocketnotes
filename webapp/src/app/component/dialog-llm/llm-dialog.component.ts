@@ -114,7 +114,7 @@ export class LlmDialogComponent implements OnDestroy, OnInit {
         error: (error) => {
           this.isLoading = false;
           this.messages.push({
-            text: error.status === 403
+            text: this.searchContext === 'web' && error.status === 403
               ? 'Web search is disabled by the server administrator.'
               : 'Could not answer this question. Please try again.',
             isUser: false,

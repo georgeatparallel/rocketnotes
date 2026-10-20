@@ -32,7 +32,7 @@ uv run pytest tests -s
 ### Web context in chat
 
 In the chat dialog, select **Context → Web** to answer a question using public
-web sources, or include an HTTP/HTTPS URL in your question to read that page.
+web sources. In Web mode, include an HTTP/HTTPS URL in your question to read that page.
 With URLs, chat fetches those pages instead of running a general search (up to
 five URLs per question). Answers include a **Web sources** list.
 

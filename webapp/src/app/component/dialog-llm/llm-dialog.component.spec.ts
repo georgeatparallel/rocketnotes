@@ -124,4 +124,11 @@ describe('LlmDialogComponent chat context', () => {
     expect(component.isLoading).toBeFalse();
     tick();
   }));
+
+  it('does not label denied note access as disabled web search', fakeAsync(() => {
+    rest.post.and.returnValue(throwError(() => ({ status: 403 })));
+    component.sendChatMessage();
+    expect(component.messages[1].text).toBe('Could not answer this question. Please try again.');
+    tick();
+  }));
 });

@@ -224,6 +224,15 @@ def test_invalid_url_and_excess_urls_do_not_contact_mcp(caller):
     assert not requests
 
 
+@pytest.mark.parametrize("wrapped", [False, True])
+def test_fetch_preserves_balanced_url_parentheses(caller, wrapped):
+    invoke, _, calls, _, _, _ = caller
+    url = "https://en.wikipedia.org/wiki/Python_(programming_language)"
+    question = f"Read [this page]({url})" if wrapped else f"Read {url}"
+    assert invoke(question)["statusCode"] == 200
+    assert calls[0]["arguments"]["urls"] == [url]
+
+
 def test_cancellation_propagates_and_stops_transport(caller):
     _, requests, _, llm, _, state = caller
     state["failure"] = "slow"

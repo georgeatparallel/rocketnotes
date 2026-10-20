@@ -65,7 +65,15 @@ async def retrieve_web_context(question, conversation_id):
     urls = list(
         dict.fromkeys(re.findall(r"https?://[^\s<>]+", question, re.IGNORECASE))
     )
-    urls = [url.rstrip(".,;!?)\"'") for url in urls]
+    cleaned_urls = []
+    for url in urls:
+        url = url.rstrip(".,;!\"'")
+        # A Markdown/prose wrapper may close after the URL, but parentheses
+        # inside Wikipedia-style paths are part of the destination.
+        while url.endswith(")") and url.count(")") > url.count("("):
+            url = url[:-1]
+        cleaned_urls.append(url)
+    urls = cleaned_urls
     if len(urls) > 5 or any(not _public_url(url) for url in urls):
         raise WebSearchError(
             "Provide at most five HTTP or HTTPS URLs without credentials."
